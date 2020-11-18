@@ -15,12 +15,12 @@ class UpdatePosition {
     slide.style.transform = `translateX(${movement}px)`;
   }
 
-  onStart(event) {
-    this.distance.start = event.clientX;
+  onStart({ clientX }) {
+    this.distance.start = clientX;
   }
 
-  onMove(event, slide) {
-    this.distance.movement = this.updatePosition(event.clientX);
+  onMove({ clientX }, slide) {
+    this.distance.movement = this.updatePosition(clientX);
     this.moveSlide(this.distance.movement, slide);
   }
 
@@ -36,6 +36,11 @@ export default class Slide {
     this.updatePosition = new UpdatePosition();
   }
 
+  onTouchStart(event) {
+    this.updatePosition.onStart(event.changedTouches[0]);
+    this.wrapper.addEventListener("touchmove", this.onMove);
+  }
+
   onStart(event) {
     event.preventDefault();
     this.updatePosition.onStart(event);
@@ -43,7 +48,9 @@ export default class Slide {
   }
 
   onMove(event) {
-    this.updatePosition.onMove(event, this.slide);
+    // refatorar esse método e dar um somente para o Touch
+    const eventType = event.clientX ? event : event.changedTouches[0];
+    this.updatePosition.onMove(eventType, this.slide);
   }
 
   onEnd() {
@@ -54,12 +61,15 @@ export default class Slide {
   addSlideEvents() {
     this.wrapper.addEventListener("mousedown", this.onStart);
     this.wrapper.addEventListener("mouseup", this.onEnd);
+    this.wrapper.addEventListener("touchstart", this.onTouchStart);
+    this.wrapper.addEventListener("touchend", this.onEnd);
   }
 
   bindEventCallbacks() {
     this.onStart = this.onStart.bind(this);
     this.onMove = this.onMove.bind(this);
     this.onEnd = this.onEnd.bind(this);
+    this.onTouchStart = this.onTouchStart.bind(this);
   }
 
   init() {
