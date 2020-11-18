@@ -15,11 +15,11 @@ class UpdatePosition {
     slide.style.transform = `translateX(${movement}px)`;
   }
 
-  onStart({ clientX }) {
+  saveInitialPosition({ clientX }) {
     this.distance.start = clientX;
   }
 
-  onMove({ clientX }, slide) {
+  updateWhileMoving({ clientX }, slide) {
     this.distance.movement = this.updatePosition(clientX);
     this.moveSlide(this.distance.movement, slide);
   }
@@ -37,35 +37,43 @@ export default class Slide {
   }
 
   onTouchStart(event) {
-    this.updatePosition.onStart(event.changedTouches[0]);
-    this.addEventsToWapper({ type: "touchmove", callback: this.onMove });
+    this.updatePosition.saveInitialPosition(event.changedTouches[0]);
+    this.addEventsToWapper({ type: "touchmove", callback: this.onTouchMove });
   }
 
   onStart(event) {
     event.preventDefault();
-    this.updatePosition.onStart(event);
-    this.addEventsToWapper({ type: "mousemove", callback: this.onMove });
+    this.updatePosition.saveInitialPosition(event);
+    this.addEventsToWapper({ type: "mousemove", callback: this.onMouseMove });
   }
 
-  onMove(event) {
-    // refatorar esse método e dar um somente para o Touch
-    const eventType = event.clientX ? event : event.changedTouches[0];
-    this.updatePosition.onMove(eventType, this.slide);
+  onTouchMove(event) {
+    this.updatePosition.updateWhileMoving(event.changedTouches[0], this.slide);
+  }
+
+  onMouseMove(event) {
+    this.updatePosition.updateWhileMoving(event, this.slide);
   }
 
   onEnd() {
     this.updatePosition.saveLastPosition();
-    this.removeEventsInWapper({ type: "mousemove", callback: this.onMove });
-    this.removeEventsInWapper({ type: "touchmove", callback: this.onMove });
+    this.removeEventsInWapper({
+      type: "mousemove",
+      callback: this.onMouseMove,
+    });
+    this.removeEventsInWapper({
+      type: "touchmove",
+      callback: this.onTouchMove,
+    });
   }
 
-  addEventsToWapper = ({ type, callback }) => {
+  addEventsToWapper({ type, callback }) {
     this.wrapper.addEventListener(type, callback);
-  };
+  }
 
-  removeEventsInWapper = ({ type, callback }) => {
+  removeEventsInWapper({ type, callback }) {
     this.wrapper.removeEventListener(type, callback);
-  };
+  }
 
   addInitialSlideEvents() {
     const initalEvents = [
@@ -97,7 +105,13 @@ export default class Slide {
   }
 
   init() {
-    this.bindingTheThis("onStart", "onMove", "onEnd", "onTouchStart");
+    this.bindingTheThis(
+      "onStart",
+      "onMouseMove",
+      "onEnd",
+      "onTouchStart",
+      "onTouchMove",
+    );
     this.addInitialSlideEvents();
     return this;
   }
