@@ -33,7 +33,7 @@ class UpdatePosition {
   }
 }
 
-export default class Slide {
+export class Slide {
   constructor(slide, wrapper) {
     this.bindingTheThis();
     this.slide = document.querySelector(slide);
@@ -172,6 +172,8 @@ export default class Slide {
       "onMouseEnd",
       "onTouchStart",
       "onTouchMove",
+      "activePreviousSlide",
+      "activeNextSlide",
     ];
 
     methodsToBind.forEach((method) => {
@@ -203,7 +205,7 @@ export default class Slide {
     };
   }
 
-  changeSlide(index) {
+  changeSlide(index = 0) {
     const currentSlidePosition = this.slideArray[index].position;
     this.currentSlideIndexesInfo(index);
     this.updatePosition.moveSlide(currentSlidePosition, this.slide);
@@ -244,8 +246,21 @@ export default class Slide {
     this.bindingTheThis();
     this.addInitialSlideListeners();
     this.slideConfig();
-    this.changeSlide(0);
+    this.changeSlide();
     this.addReziseEvent();
     return this;
+  }
+}
+
+export class SlideNav extends Slide {
+  addArrow(previous, next) {
+    this.transition(true);
+    this.previousElement = document.querySelector(previous);
+    this.nextElement = document.querySelector(next);
+    this.addArrowEvent();
+  }
+  addArrowEvent() {
+    this.previousElement.addEventListener("click", this.activePreviousSlide);
+    this.nextElement.addEventListener("click", this.activeNextSlide);
   }
 }
