@@ -15,16 +15,16 @@ class UpdatePosition {
     slide.style.transform = `translateX(${movement}px)`;
   }
 
-  onStart(event) {
-    this.distance.start = event.clientX;
+  saveInitialPosition({ clientX }) {
+    this.distance.start = clientX;
   }
 
-  onMove(event, slide) {
-    this.distance.movement = this.updatePosition(event.clientX);
+  updateAndMoveSlide({ clientX }, slide) {
+    this.distance.movement = this.updatePosition(clientX);
     this.moveSlide(this.distance.movement, slide);
   }
 
-  onEnd() {
+  saveLastPosition() {
     this.distance.finalPosition = this.distance.movement;
   }
 }
@@ -36,35 +36,92 @@ export default class Slide {
     this.updatePosition = new UpdatePosition();
   }
 
-  onStart(event) {
+  addListenersToWapper ({ type, callback }) {
+    this.wrapper.addEventListener(type, callback);
+  };
+
+  removeListenersInWapper({ type, callback }) {
+    this.wrapper.removeEventListener(type, callback);
+  };
+
+  onTouchStart(event) {
+    this.updatePosition.saveInitialPosition(event.changedTouches[0]);
+    this.addListenersToWapper({ type: "touchmove", callback: this.onTouchMove });
+  }
+
+  onMouseStart(event) {
     event.preventDefault();
-    this.updatePosition.onStart(event);
-    this.wrapper.addEventListener("mousemove", this.onMove);
+    this.updatePosition.saveInitialPosition(event);
+    this.addListenersToWapper({ type: "mousemove", callback: this.onMouseMove });
   }
 
-  onMove(event) {
-    this.updatePosition.onMove(event, this.slide);
+  onTouchMove(event) {
+    this.updatePosition.updateAndMoveSlide(event.changedTouches[0], this.slide);
   }
 
-  onEnd() {
-    this.updatePosition.onEnd();
-    this.wrapper.removeEventListener("mousemove", this.onMove);
+  onMouseMove(event) {
+    this.updatePosition.updateAndMoveSlide(event, this.slide);
   }
 
-  addSlideEvents() {
-    this.wrapper.addEventListener("mousedown", this.onStart);
-    this.wrapper.addEventListener("mouseup", this.onEnd);
+  onTouchEnd() {
+    this.updatePosition.saveLastPosition();
+    this.removeListenersInWapper({
+      type: "touchmove",
+      callback: this.onTouchMove,
+    });
   }
 
-  bindEventCallbacks() {
-    this.onStart = this.onStart.bind(this);
-    this.onMove = this.onMove.bind(this);
-    this.onEnd = this.onEnd.bind(this);
+  onMouseEnd() {
+    this.updatePosition.saveLastPosition();
+    this.removeListenersInWapper({
+      type: "mousemove",
+      callback: this.onMouseMove,
+    });
+  }
+
+  addInitialSlideListeners() {
+    const initalListeners = [
+      {
+        type: "mousedown",
+        callback: this.onMouseStart,
+      },
+      {
+        type: "mouseup",
+        callback: this.onMouseEnd,
+      },
+      {
+        type: "touchstart",
+        callback: this.onTouchStart,
+      },
+      {
+        type: "touchend",
+        callback: this.onMouseEnd,
+      },
+    ];
+
+    initalListeners.forEach(this.addListenersToWapper);
+  }
+
+  bindingTheThis() {
+    const methodsToBind = [
+      "addListenersToWapper",
+      "removeListenersInWapper",
+      "onMouseStart",
+      "onMouseMove",
+      "onTouchEnd",
+      "onMouseEnd",
+      "onTouchStart",
+      "onTouchMove",
+    ];
+
+    methodsToBind.forEach((method) => {
+      this[method] = this[method].bind(this);
+    });
   }
 
   init() {
-    this.bindEventCallbacks();
-    this.addSlideEvents();
+    this.bindingTheThis();
+    this.addInitialSlideListeners();
     return this;
   }
 }
