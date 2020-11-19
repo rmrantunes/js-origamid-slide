@@ -1,3 +1,5 @@
+import debouce from "./debounce.js";
+
 class UpdatePosition {
   constructor() {
     this.distance = {
@@ -33,9 +35,11 @@ class UpdatePosition {
 
 export default class Slide {
   constructor(slide, wrapper) {
+    this.bindingTheThis();
     this.slide = document.querySelector(slide);
     this.wrapper = document.querySelector(wrapper);
     this.updatePosition = new UpdatePosition();
+    this.activeClass = "active";
   }
 
   transition(active) {
@@ -129,6 +133,30 @@ export default class Slide {
         type: "touchend",
         callback: this.onMouseEnd,
       },
+      /*{
+        type: "click",
+        callback: (e) => {
+          const liTarget = e.path.find((i) => {
+            return i.parentElement === this.slide;
+          });
+          if (liTarget) {
+            if (typeof liTarget.dataset.slideIndex !== "number") {
+              const findElementIndex = (el) => {
+                let index = 0;
+                let pes = el.previousElementSibling;
+                while (pes !== null) {
+                  pes = pes.previousElementSibling;
+                  index++;
+                }
+                return index;
+              };
+              liTarget.dataset.slideIndex = findElementIndex(liTarget);
+            }
+            const { slideIndex } = liTarget.dataset;
+            this.changeSlide(slideIndex);
+          }
+        },
+      },*/
     ];
 
     initalListeners.forEach(this.addListenersToWapper);
@@ -149,6 +177,7 @@ export default class Slide {
     methodsToBind.forEach((method) => {
       this[method] = this[method].bind(this);
     });
+    this.onResize = debouce(this.onResize.bind(this), 200);
   }
 
   slidePosition(element) {
@@ -179,6 +208,16 @@ export default class Slide {
     this.currentSlideIndexesInfo(index);
     this.updatePosition.moveSlide(currentSlidePosition, this.slide);
     this.updatePosition.saveLastPosition(currentSlidePosition);
+    this.changeActiveClass();
+  }
+
+  changeActiveClass() {
+    this.slideArray.forEach((item) =>
+      item.element.classList.remove(this.activeClass),
+    );
+    this.slideArray[this.indexes.current].element.classList.add(
+      this.activeClass,
+    );
   }
 
   activePreviousSlide() {
@@ -190,11 +229,23 @@ export default class Slide {
     if (this.indexes.next !== undefined) this.changeSlide(this.indexes.next);
   }
 
+  onResize() {
+    setTimeout(() => {
+      this.slideConfig();
+      this.changeSlide(this.indexes.current);
+    }, 750);
+  }
+
+  addReziseEvent() {
+    window.addEventListener("resize", this.onResize);
+  }
+
   init() {
     this.bindingTheThis();
     this.addInitialSlideListeners();
     this.slideConfig();
     this.changeSlide(0);
+    this.addReziseEvent();
     return this;
   }
 }
