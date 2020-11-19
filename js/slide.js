@@ -24,8 +24,8 @@ class UpdatePosition {
     this.moveSlide(this.distance.movement, slide);
   }
 
-  saveLastPosition() {
-    this.distance.finalPosition = this.distance.movement;
+  saveLastPosition(movement = this.distance.movement) {
+    this.distance.finalPosition = movement;
   }
 }
 
@@ -36,23 +36,29 @@ export default class Slide {
     this.updatePosition = new UpdatePosition();
   }
 
-  addListenersToWapper ({ type, callback }) {
+  addListenersToWapper({ type, callback }) {
     this.wrapper.addEventListener(type, callback);
-  };
+  }
 
   removeListenersInWapper({ type, callback }) {
     this.wrapper.removeEventListener(type, callback);
-  };
+  }
 
   onTouchStart(event) {
     this.updatePosition.saveInitialPosition(event.changedTouches[0]);
-    this.addListenersToWapper({ type: "touchmove", callback: this.onTouchMove });
+    this.addListenersToWapper({
+      type: "touchmove",
+      callback: this.onTouchMove,
+    });
   }
 
   onMouseStart(event) {
     event.preventDefault();
     this.updatePosition.saveInitialPosition(event);
-    this.addListenersToWapper({ type: "mousemove", callback: this.onMouseMove });
+    this.addListenersToWapper({
+      type: "mousemove",
+      callback: this.onMouseMove,
+    });
   }
 
   onTouchMove(event) {
@@ -119,9 +125,41 @@ export default class Slide {
     });
   }
 
+  slidePosition(element) {
+    const margin = (this.wrapper.offsetWidth - element.offsetWidth) / 2;
+    return -(element.offsetLeft - margin);
+  }
+
+  slideConfig() {
+    this.slideArray = [...this.slide.children].map((element) => {
+      return {
+        element,
+        position: this.slidePosition(element),
+      };
+    });
+  }
+
+  currentSlideIndexesInfo(index) {
+    const lastElementIndex = this.slideArray.length - 1;
+    this.indexes = {
+      previous: index ? index - 1 : undefined,
+      current: index,
+      next: index >= lastElementIndex ? undefined : index + 1,
+    };
+  }
+
+  changeSlide(index) {
+    const currentSlidePosition = this.slideArray[index].position;
+    this.currentSlideIndexesInfo(index);
+    this.updatePosition.moveSlide(currentSlidePosition, this.slide);
+    this.updatePosition.saveLastPosition(currentSlidePosition);
+  }
+
   init() {
     this.bindingTheThis();
     this.addInitialSlideListeners();
+    this.slideConfig();
+    this.changeSlide(1);
     return this;
   }
 }
