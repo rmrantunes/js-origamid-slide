@@ -33,7 +33,7 @@ class UpdatePosition {
   }
 }
 
-export class Slide {
+class Slide {
   constructor(slide, wrapper) {
     this.bindingTheThis();
     this.slide = document.querySelector(slide);
@@ -134,30 +134,30 @@ export class Slide {
         type: "touchend",
         callback: this.onMouseEnd,
       },
-      /*{
-        type: "click",
-        callback: (e) => {
-          const liTarget = e.path.find((i) => {
-            return i.parentElement === this.slide;
-          });
-          if (liTarget) {
-            if (typeof liTarget.dataset.slideIndex !== "number") {
-              const findElementIndex = (el) => {
-                let index = 0;
-                let pes = el.previousElementSibling;
-                while (pes !== null) {
-                  pes = pes.previousElementSibling;
-                  index++;
-                }
-                return index;
-              };
-              liTarget.dataset.slideIndex = findElementIndex(liTarget);
-            }
-            const { slideIndex } = liTarget.dataset;
-            this.changeSlide(slideIndex);
-          }
-        },
-      },*/
+      // {
+      //   type: "click",
+      //   callback: (e) => {
+      //     const liTarget = e.path.find((i) => {
+      //       return i.parentElement === this.slide;
+      //     });
+      //     if (liTarget) {
+      //       if (typeof liTarget.dataset.slideIndex !== "number") {
+      //         const findElementIndex = (el) => {
+      //           let index = 0;
+      //           let pes = el.previousElementSibling;
+      //           while (pes !== null) {
+      //             pes = pes.previousElementSibling;
+      //             index++;
+      //           }
+      //           return index;
+      //         };
+      //         liTarget.dataset.slideIndex = findElementIndex(liTarget);
+      //       }
+      //       const { slideIndex } = liTarget.dataset;
+      //       this.changeSlide(slideIndex);
+      //     }
+      //   },
+      // },
     ];
 
     initalListeners.forEach(this.addListenersToWapper);
@@ -254,7 +254,7 @@ export class Slide {
   }
 }
 
-export class SlideNav extends Slide {
+export default class SlideNav extends Slide {
   constructor(slide, wrapper) {
     super(slide, wrapper);
     this.bindControlEvents();
